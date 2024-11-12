@@ -177,7 +177,8 @@ class SubstitutionsParser {
     }
   }
 
-  Future<SubstitutionPlan> getAllSubstitutions({required bool filtered, skipLoginCheck = false}) async {
+  Future<SubstitutionPlan> getAllSubstitutions(
+      {required bool filtered, skipLoginCheck = false}) async {
     if (!skipLoginCheck) {
       if (!client.doesSupportFeature(SPHAppEnum.vertretungsplan)) {
         throw NotSupportedException();
@@ -197,7 +198,8 @@ class SubstitutionsParser {
 
       final fullPlan = SubstitutionPlan();
       fullPlan.lastUpdated = lastEdit ?? DateTime.now();
-      List<Future<SubstitutionDay>> futures = dates.map((date) => getSubstitutionsAJAX(date)).toList();
+      List<Future<SubstitutionDay>> futures =
+          dates.map((date) => getSubstitutionsAJAX(date)).toList();
       List<SubstitutionDay> plans = await Future.wait(futures);
       for (SubstitutionDay plan in plans) {
         fullPlan.add(plan);
@@ -211,21 +213,25 @@ class SubstitutionsParser {
   }
 
   void loadFilterFromStorage() async {
-    String filterString = await globalStorage.read(key: StorageKey.substitutionsFilter);
+    String filterString =
+        await globalStorage.read(key: StorageKey.substitutionsFilter);
     if (filterString == "") return;
-    localFilter = Map<String, EntryFilter>.from(jsonDecode(filterString)).map((key, value) {
+    localFilter = Map<String, EntryFilter>.from(jsonDecode(filterString))
+        .map((key, value) {
       return MapEntry(key, parseEntryFilter(Map<String, dynamic>.from(value)));
     });
   }
 
   void saveFilterToStorage() async {
-    await globalStorage.write(key: StorageKey.substitutionsFilter, value: jsonEncode(localFilter));
+    await globalStorage.write(
+        key: StorageKey.substitutionsFilter, value: jsonEncode(localFilter));
   }
 
   ///parses a the first occurence of a string this type into a DateTime object
   ///"Letzte Aktualisierung: 08.05.2024 um 13:35:30 Uhr"
   DateTime? parseLastEditDate(String document) {
-    RegExp lastEditPattern = RegExp(r'Letzte Aktualisierung: (\d{2})\.(\d{2})\.(\d{4}) um (\d{2}):(\d{2}):(\d{2}) Uhr');
+    RegExp lastEditPattern = RegExp(
+        r'Letzte Aktualisierung: (\d{2})\.(\d{2})\.(\d{4}) um (\d{2}):(\d{2}):(\d{2}) Uhr');
     RegExpMatch? match = lastEditPattern.firstMatch(document);
     if (match == null) return null;
     int day = int.parse(match.group(1) ?? "00");
@@ -237,7 +243,6 @@ class SubstitutionsParser {
     return DateTime(year, month, day, hour, minute, second);
   }
 }
-
 
 /// A data class to store a single substitution information
 class Substitution {
@@ -287,25 +292,40 @@ class Substitution {
 
   bool passesFilter(SubstitutionFilter substitutionsFilter) {
     Map<String, Function> filterFunctions = {
-      "Klasse": (filter) => filterElement(klasse, filter["filter"], filter["strict"]),
-      "Fach": (filter) => filterElement(fach, filter["filter"], filter["strict"]),
-      "Fach_alt": (filter) => filterElement(fach_alt, filter["filter"], filter["strict"]),
-      "Lehrer": (filter) => filterElement(lehrer, filter["filter"], filter["strict"]),
-      "Raum": (filter) => filterElement(raum, filter["filter"], filter["strict"]),
+      "Klasse": (filter) =>
+          filterElement(klasse, filter["filter"], filter["strict"]),
+      "Fach": (filter) =>
+          filterElement(fach, filter["filter"], filter["strict"]),
+      "Fach_alt": (filter) =>
+          filterElement(fach_alt, filter["filter"], filter["strict"]),
+      "Lehrer": (filter) =>
+          filterElement(lehrer, filter["filter"], filter["strict"]),
+      "Raum": (filter) =>
+          filterElement(raum, filter["filter"], filter["strict"]),
       "Art": (filter) => filterElement(art, filter["filter"], filter["strict"]),
-      "Hinweis": (filter) => filterElement(hinweis, filter["filter"], filter["strict"]),
-      "Vertreter": (filter) => filterElement(vertreter, filter["filter"], filter["strict"]),
-      "Stunde": (filter) => filterElement(stunde, filter["filter"], filter["strict"]),
-      "Lehrerkuerzel": (filter) => filterElement(Lehrerkuerzel, filter["filter"], filter["strict"]),
-      "Vertreterkuerzel": (filter) => filterElement(Vertreterkuerzel, filter["filter"], filter["strict"]),
-      "Klasse_alt": (filter) => filterElement(klasse_alt, filter["filter"], filter["strict"]),
-      "Raum_alt": (filter) => filterElement(raum_alt, filter["filter"], filter["strict"]),
-      "Hinweis2": (filter) => filterElement(hinweis2, filter["filter"], filter["strict"]),
+      "Hinweis": (filter) =>
+          filterElement(hinweis, filter["filter"], filter["strict"]),
+      "Vertreter": (filter) =>
+          filterElement(vertreter, filter["filter"], filter["strict"]),
+      "Stunde": (filter) =>
+          filterElement(stunde, filter["filter"], filter["strict"]),
+      "Lehrerkuerzel": (filter) =>
+          filterElement(Lehrerkuerzel, filter["filter"], filter["strict"]),
+      "Vertreterkuerzel": (filter) =>
+          filterElement(Vertreterkuerzel, filter["filter"], filter["strict"]),
+      "Klasse_alt": (filter) =>
+          filterElement(klasse_alt, filter["filter"], filter["strict"]),
+      "Raum_alt": (filter) =>
+          filterElement(raum_alt, filter["filter"], filter["strict"]),
+      "Hinweis2": (filter) =>
+          filterElement(hinweis2, filter["filter"], filter["strict"]),
     };
 
     for (var key in substitutionsFilter.keys) {
       final filter = substitutionsFilter[key];
-      if (filter == null || filter["filter"] == null || filter["filter"].isEmpty) {
+      if (filter == null ||
+          filter["filter"] == null ||
+          filter["filter"].isEmpty) {
         continue;
       }
       if (filterFunctions.containsKey(key) && !filterFunctions[key]!(filter)) {
@@ -320,7 +340,7 @@ class Substitution {
     if (value == null) {
       return false;
     }
-    if (!(strict??true)) {
+    if (!(strict ?? true)) {
       return filter.any((element) => value.contains(element));
     }
     for (var singleFilter in filter) {
@@ -332,25 +352,25 @@ class Substitution {
   }
 
   Map<String, dynamic> toJson() => {
-    'tag': tag,
-    'tag_en': tag_en,
-    'stunde': stunde,
-    'vertreter': vertreter,
-    'lehrer': lehrer,
-    'klasse': klasse,
-    'klasse_alt': klasse_alt,
-    'fach': fach,
-    'fach_alt': fach_alt,
-    'raum': raum,
-    'raum_alt': raum_alt,
-    'hinweis': hinweis,
-    'hinweis2': hinweis2,
-    'art': art,
-    'Lehrerkuerzel': Lehrerkuerzel,
-    'Vertreterkuerzel': Vertreterkuerzel,
-    'lerngruppe': lerngruppe,
-    'hervorgehoben': hervorgehoben,
-  };
+        'tag': tag,
+        'tag_en': tag_en,
+        'stunde': stunde,
+        'vertreter': vertreter,
+        'lehrer': lehrer,
+        'klasse': klasse,
+        'klasse_alt': klasse_alt,
+        'fach': fach,
+        'fach_alt': fach_alt,
+        'raum': raum,
+        'raum_alt': raum_alt,
+        'hinweis': hinweis,
+        'hinweis2': hinweis2,
+        'art': art,
+        'Lehrerkuerzel': Lehrerkuerzel,
+        'Vertreterkuerzel': Vertreterkuerzel,
+        'lerngruppe': lerngruppe,
+        'hervorgehoben': hervorgehoben,
+      };
 
   Substitution.fromJson(Map<String, dynamic> json)
       : tag = json['tag'],
@@ -371,7 +391,6 @@ class Substitution {
         Vertreterkuerzel = json['Vertreterkuerzel'],
         lerngruppe = json['lerngruppe'],
         hervorgehoben = json['hervorgehoben'];
-
 }
 
 /// A data class to store all substitution information for a single day
@@ -391,9 +410,9 @@ class SubstitutionDay {
   }
 
   Map<String, dynamic> toJson() => {
-    'date': date,
-    'substitutions': substitutions.map((s) => s.toJson()).toList(),
-  };
+        'date': date,
+        'substitutions': substitutions.map((s) => s.toJson()).toList(),
+      };
 
   SubstitutionDay.fromJson(Map<String, dynamic> json)
       : date = json['date'],
@@ -433,13 +452,13 @@ class SubstitutionPlan {
   }
 
   Map<String, dynamic> toJson() => {
-    'days': days.map((d) => d.toJson()).toList(),
-    'lastUpdated': lastUpdated.toIso8601String(),
-  };
+        'days': days.map((d) => d.toJson()).toList(),
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
 
   SubstitutionPlan.fromJson(Map<String, dynamic> json)
       : days = (json['days'] as List)
-      .map((i) => SubstitutionDay.fromJson(i))
-      .toList(),
+            .map((i) => SubstitutionDay.fromJson(i))
+            .toList(),
         lastUpdated = DateTime.parse(json['lastUpdated']);
 }
