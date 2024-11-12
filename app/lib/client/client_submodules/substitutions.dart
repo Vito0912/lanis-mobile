@@ -71,30 +71,40 @@ class SubstitutionsParser {
           (element) => element.querySelectorAll("td[colspan]").isEmpty)) {
         final fields = row.querySelectorAll("td");
         substitutionDay.add(Substitution(
-            tag: parsedDate.format('dd.MM.yyyy'),
-            tag_en: date,
-            stunde: fields[headers.indexOf("Stunde")].text.trim(),
-            fach: headers.contains("Fach")
-                ? fields[headers.indexOf("Fach")].text.trim()
-                : null,
-            art: headers.contains("Art")
-                ? fields[headers.indexOf("Art")].text.trim()
-                : null,
-            raum: headers.contains("Raum")
-                ? fields[headers.indexOf("Raum")].text.trim()
-                : null,
-            hinweis: headers.contains("Hinweis")
-                ? fields[headers.indexOf("Hinweis")].text.trim()
-                : null,
-            lehrer: headers.contains("Lehrer")
-                ? fields[headers.indexOf("Lehrer")].text.trim()
-                : null,
-            vertreter: headers.contains("Vertretung")
-                ? fields[headers.indexOf("Vertretung")].text.trim()
-                : null,
-            klasse: headers.contains("Klasse")
-                ? fields[headers.indexOf("Klasse")].text.trim()
-                : null));
+          tag: parsedDate.format('dd.MM.yyyy'),
+          tag_en: date,
+          stunde: fields[headers.indexOf("Stunde")].text.trim(),
+          fach: headers.contains("Fach")
+              ? fields[headers.indexOf("Fach")].text.trim()
+              : null,
+          art: headers.contains("Art")
+              ? fields[headers.indexOf("Art")].text.trim()
+              : null,
+          raum: headers.contains("Raum")
+              ? fields[headers.indexOf("Raum")].text.trim()
+              : null,
+          hinweis: headers.contains("Hinweis")
+              ? fields[headers.indexOf("Hinweis")].text.trim()
+              : null,
+          lehrer: headers.contains("Lehrer")
+              ? fields[headers.indexOf("Lehrer")].text.trim()
+              : null,
+          vertreter: headers.contains("Vertretung")
+              ? fields[headers.indexOf("Vertretung")].text.trim()
+              : null,
+          klasse: headers.contains("Klasse")
+              ? fields[headers.indexOf("Klasse")].text.trim()
+              : null,
+          klasse_alt: headers.contains("Klasse_alt")
+              ? fields[headers.indexOf("Klasse_alt")].text.trim()
+              : null,
+          fach_alt: headers.contains("Fach_alt")
+              ? fields[headers.indexOf("Fach_alt")].text.trim()
+              : null,
+          raum_alt: headers.contains("Raum_alt")
+              ? fields[headers.indexOf("Raum_alt")].text.trim()
+              : null,
+        ));
       }
       fullPlan.add(substitutionDay);
     }
