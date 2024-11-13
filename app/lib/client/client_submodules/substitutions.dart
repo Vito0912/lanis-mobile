@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dart_date/dart_date.dart';
 import 'package:dio/dio.dart';
+import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 import 'package:intl/intl.dart';
 import 'package:sph_plan/client/client.dart';
@@ -57,8 +58,54 @@ class SubstitutionsParser {
         .map((element) => element.attributes["data-tag"]!);
     for (var date in dates) {
       DateTime parsedDate = eingabeFormat.parse(date);
-      SubstitutionDay substitutionDay =
-          SubstitutionDay(date: parsedDate.format('dd.MM.yyyy'));
+      String parsedDateStr = parsedDate.format('dd.MM.yyyy');
+      SubstitutionDay substitutionDay = SubstitutionDay(date: parsedDateStr);
+
+      // Select table by multiple classes
+      // Is this a good way? No. Does it work? Yes. Hopefully.
+      var infoHeaders = document.querySelectorAll('h3.hidden-xs');
+
+      List<SubstitutionInfo?> info;
+      for (Element header in infoHeaders) {
+        String headerText = header.text.trim();
+
+        RegExp dateRegex = RegExp(r'\b\d{2}\.\d{2}\.\d{4}\b');
+        var dateMatch = dateRegex.firstMatch(headerText);
+        if (dateMatch != null) {
+          if (parsedDateStr == dateMatch.group(0)!) {
+            Element? nextTable = header.nextElementSibling;
+            while (nextTable != null && !nextTable.classes.contains('infos')) {
+              nextTable = nextTable.nextElementSibling;
+            }
+
+            if (nextTable != null) {
+              var rows = nextTable.querySelectorAll('tr');
+              bool isHeader = false;
+              SubstitutionInfo? tmpInfo;
+              for (var row in rows) {
+                var cells = row.querySelectorAll('td');
+                if (row.classes.contains('header')) isHeader = true;
+                for (var cell in cells) {
+                  if (isHeader) {
+                    if (tmpInfo != null) {
+                      substitutionDay.substitutionInfos?.add(tmpInfo);
+                    }
+                    tmpInfo =
+                        SubstitutionInfo(header: cell.text.trim(), values: []);
+                  } else {
+                    tmpInfo?.values.add(cell.text.trim());
+                  }
+                }
+                isHeader = false;
+              }
+            }
+          }
+        }
+      }
+
+      final generalTable = document.querySelector(
+          "table.table.table-hover.table-condensed.table-striped.infos");
+
       final vtable = document.querySelector("#vtable$date");
       if (vtable == null) {
         return fullPlan;
@@ -407,8 +454,12 @@ class Substitution {
 class SubstitutionDay {
   final String date;
   final List<Substitution> substitutions;
+  final List<SubstitutionInfo>? substitutionInfos;
 
-  SubstitutionDay({required this.date, List<Substitution>? substitutions})
+  SubstitutionDay(
+      {required this.date,
+      List<Substitution>? substitutions,
+      this.substitutionInfos})
       : substitutions = substitutions ?? [];
 
   void add(Substitution substitution) {
@@ -428,7 +479,12 @@ class SubstitutionDay {
       : date = json['date'],
         substitutions = (json['substitutions'] as List)
             .map((i) => Substitution.fromJson(i))
-            .toList();
+            .toList(),
+        substitutionInfos = json['substitutionInfos'] != null
+            ? (json['substitutionInfos'] as List)
+                .map((i) => SubstitutionInfo.fromJson(i))
+                .toList()
+            : null;
 }
 
 /// A data class to store all substitution information available
@@ -471,4 +527,21 @@ class SubstitutionPlan {
             .map((i) => SubstitutionDay.fromJson(i))
             .toList(),
         lastUpdated = DateTime.parse(json['lastUpdated']);
+}
+
+/// A data class to store all information for a substitution day
+class SubstitutionInfo {
+  final String header;
+  final List<String> values;
+
+  SubstitutionInfo({required this.header, required this.values});
+
+  Map<String, dynamic> toJson() => {
+        'header': header,
+        'values': values,
+      };
+
+  SubstitutionInfo.fromJson(Map<String, dynamic> json)
+      : header = json['header'],
+        values = json['values'];
 }
